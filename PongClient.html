@@ -3,10 +3,26 @@
 
 <head>
 	<meta charset='UTF-8' />
+	<style>
+        #ip {line-height:20px}
+        #port {line-height:20px}
+
+		#body {max-width:800px;margin:auto}
+	</style>
+	<script src="Pong.js"></script>
 </head>
 
 
 <body>
+	<div id='body'>
+		Server IP: <input type='text' id='ip' name='ip'>
+		</br>
+		Server Port: <input type='text' id='port' name='port'>
+		</br>
+		<button type='button' id='playB'>Play</button>
+		</br>
+		<button type='button' id='disB'>Disconnect</button>
+	</div>
 </body>
 
 </html>
