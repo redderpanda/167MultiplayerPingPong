@@ -12,54 +12,76 @@
             line-height: 20px
         }
 
-        #port {
-            line-height: 20px
-        }
-
         #game {
             padding-left: 200px
         }
+        #log {
+        	width:50%;height:400px
+        }
+		#message {
+			width:50%;line-height:20px
+		}
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script src="fancywebsocket.js"></script>
     <script>
 		var Server;
 
+		function log( text ) {
+			$log = $('#log');
+			//Add text to log
+			$log.append(($log.val()?"\n":'')+text);
+			//Autoscroll
+			$log[0].scrollTop = $log[0].scrollHeight - $log[0].clientHeight;
+		}
+
 		function send( text ) {
 			Server.send( 'message', text );
 		}
+		function runFunction(){
+        	send(ball.x);
+        	send(ball.y);
+        }
 
         function connect(){
-            //log('Connecting...');
+            log('Connecting...');
 
             var portVal = document.createElement("portVal");
             portVal.value = '1000';
 
 			Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + portVal.value);
 
-			//$('#message').keypress(function(e) {
-			//	if ( e.keyCode == 13 && this.value ) {
-			//		log( 'You: ' + this.value );
-			//		send( this.value );
+			$('#message').keypress(function(e) {
+				if ( e.keyCode == 13 && this.value ) {
+					log( 'You: ' + this.value );
+					log('You ' + ball.x);
+					log('You ' + ball.y);
+					send( this.value );
+					send(ball.x);
+					send(ball.y);
 
-			//		$(this).val('');
-			//	}
-			//});
+					$(this).val('');
+				}
+			});
+			$(function(){
+				setInterval(runFunction,100);
+			});
 
 			//Let the user know we're connected
 			Server.bind('open', function() {
-                document.getElementById("cntBtn").disabled = true;
-				//log( "Connected." );
+                document.getElementById("playB").disabled = true;
+				log( "Connected." );
 			});
 
 			//OH NOES! Disconnection occurred.
 			Server.bind('close', function( data ) {
-                document.getElementById("cntBtn").disabled = false;
-				//log( "Disconnected." );
+                document.getElementById("playB").disabled = false;
+				log( "Disconnected." );
 			});
 
 			//Log any messages sent from server
 			Server.bind('message', function( payload ) {
-				//log( payload );
+				log( payload );
 			});
 
 			Server.connect();
@@ -67,7 +89,7 @@
 
         function disconnect(){
         	Server.disconnect();
-        	//log("Disconnecting...");
+        	log("Disconnecting...");
         }
 
     </script>
@@ -81,14 +103,18 @@
         </br>
         Server IP  : <input type='text' id='ip' name='ip'>
         </br>
-        <button type='button' id='playB'>Play</button>
+        <button type='button' id='playB' onclick="connect();">Play</button>
         </br>
-        <button type='button' id='disB'>Disconnect</button>
+        <button type='button' id='disB' onclick="disconnect();">Disconnect</button>
     </div>
-
 	<div id ='game'>
 		<script src="Pong.js"></script>
 	</div>
+	<div id='textarea'>
+		<textarea id='log' name='log' readonly='readonly'></textarea><br/>
+		<input type='text' id='message' name='message' />
+	</div>
+
 </body>
 
 </html>
