@@ -17,11 +17,13 @@ struct Vector2 {
 
 struct Ball {
 	Vector2 position;
-	Vector2 direction;
+	Vector2 speed;
 };
 
 struct Paddle {
 	Vector2 position;
+	int width = 50;
+	int height = 10;
 };
 
 struct Player {
@@ -43,6 +45,8 @@ struct GameState {
 	Player player4;
 };
 
+
+
 //need to set starting positions of each paddle
 Paddle paddle1;
 
@@ -54,6 +58,50 @@ Paddle paddle4;
 
 Paddle paddle_array[] = { paddle1,paddle2,paddle3,paddle4 };
 GameState LocalGamestate;
+
+void ball_update() {
+	LocalGamestate.gameBall.position.x += LocalGamestate.gameBall.speed.x;
+	LocalGamestate.gameBall.position.y += LocalGamestate.gameBall.speed.y;
+	int top_x = LocalGamestate.gameBall.position.x - 5;
+	int top_y = LocalGamestate.gameBall.position.y - 5;
+	int bottom_x = LocalGamestate.gameBall.position.x + 5;
+	int bottom_y = LocalGamestate.gameBall.position.y + 5;
+
+	if (top_x < 0) //hit left wall
+	{
+		LocalGamestate.gameBall.position.x = 5;
+		LocalGamestate.gameBall.speed.x = -LocalGamestate.gameBall.speed.x;
+
+	}
+	else if (bottom_x > 600) //hit right wall
+	{
+		LocalGamestate.gameBall.position.x = 595;
+		LocalGamestate.gameBall.speed.x = -LocalGamestate.gameBall.speed.x;
+	}
+	else if (top_y < 0) 
+	{
+		LocalGamestate.gameBall.position.y = 5;
+		LocalGamestate.gameBall.speed.y = -LocalGamestate.gameBall.speed.y;
+	}
+
+	if (LocalGamestate.gameBall.position.y > 600) 
+	{
+		LocalGamestate.gameBall.speed.x = 0;
+		LocalGamestate.gameBall.speed.y = 3;
+
+		LocalGamestate.gameBall.position.x = 300;
+		LocalGamestate.gameBall.position.y = 300;
+	}
+}
+
+void parse_player_message() {
+	//goes in message handler
+}
+
+
+
+std::string form_state_message() {
+}
 
 /* called when a client connects */
 void openHandler(int clientID){
@@ -113,22 +161,57 @@ void messageHandler(int clientID, string message){
 
 /* called once per select() loop */
 void periodicHandler(){
-    static time_t next = time(NULL) + 10;
-    time_t current = time(NULL);
-    if (current >= next){
-        ostringstream os;
-			char timecstring[26];
+	static clock_t clock_next = (clock() / CLOCKS_PER_SEC) + 5;
+	static float float_next = float (clock_next);
+
+	clock_t clock_current = clock()/CLOCKS_PER_SEC;
+	float float_current = float(clock_current);
+
+	time_t current = time(NULL);
+
+	if (float_current >= float_next) {
+		//Server Side Game Updates Go Here
+		//Create Packets
+		ostringstream os;
+		char timecstring[26];
 		ctime_s(timecstring, sizeof(timecstring), &current);
 		string timestring(timecstring);
-        timestring = timestring.substr(0, timestring.size() - 1);
-        os << timestring;
+		timestring = timestring.substr(0, timestring.size() - 1);
+		os << timestring;
 
-        vector<int> clientIDs = server.getClientIDs();
-        for (int i = 0; i < clientIDs.size(); i++)
-            server.wsSend(clientIDs[i], os.str());
+		vector<int> clientIDs = server.getClientIDs();
 
-        next = time(NULL) + 10;
-    }
+		for (int i = 0; i < clientIDs.size(); i++) {
+			server.wsSend(clientIDs[i], os.str());
+		}
+
+
+		float_next = float(clock()/CLOCKS_PER_SEC) + 0.5;
+	}
+
+
+
+  //  static time_t next = time(NULL) + 10;
+  //  time_t current = time(NULL);
+  //  if (current >= next){
+		////Server Side Game Updates Go Here
+		////Create Packets
+  //      ostringstream os;
+		//	char timecstring[26];
+		//ctime_s(timecstring, sizeof(timecstring), &current);
+		//string timestring(timecstring);
+  //      timestring = timestring.substr(0, timestring.size() - 1);
+  //      os << timestring;
+
+  //      vector<int> clientIDs = server.getClientIDs();
+
+		//for (int i = 0; i < clientIDs.size(); i++) {
+		//	server.wsSend(clientIDs[i], os.str());
+		//}
+  //          
+
+  //      next = time(NULL) + 0.5;
+  //  }
 }
 
 
