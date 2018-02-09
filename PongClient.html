@@ -41,24 +41,24 @@
 		function runFunction(){ // function to be run a certain amount of times per millisecond
         	$(document).keydown(function(e){ // check if a key is pressed
         		if(e.keyCode == 37){ // left arrow
-        			log("press left arrow");
+        			//log("press left arrow");
         			send(37); // send to server
         		}
         		if(e.keyCode == 38){ //up arroww
-        			log("press left arrow");
+        			//log("press up arrow");
         			send(38)
         		}
         		if(e.keyCode == 39){ // right arrow
-        			log("press right arrow");
+        			//log("press right arrow");
         			send(39); // send to server
         		}
         		if(e.keyCode == 40){ // down arrow
-        			log("press down arrow");
+        			//log("press down arrow");
         			send(40); // send to server
         		}
-        		// log("ballX:ballY:ballspeedX:ballspeedY:player1X:player1Y:player1speedX:player1speedY");//test code
-        		// send("ballX:ballY:ballspeedX:ballspeedY:player1X:player1Y:player1speedX:player1speedY");
-        	});
+
+        	}
+        	);
         }
 
         function connect(){
@@ -80,14 +80,16 @@
 			// 		$(this).val('');
 			// 	}
 			// });
+			//send(document.getElementById('nickName').value);
 
 			$(function(){
-				setInterval(runFunction,10000); // called every 10000 milliseconds (10seconds)? seems to act faster though
+				setInterval(runFunction,1000); // called every 500 milliseconds (0.5seconds)? seems to act faster though
 			});
 
 			//Let the user know we're connected
 			Server.bind('open', function() {
                 document.getElementById("playB").disabled = true;
+                //send(document.getElementById('nickName').value);
 				log( "Connected." );
 			});
 
@@ -100,12 +102,21 @@
 			//Log any messages sent from server
 			Server.bind('message', function( payload ) { //parse through the gamestate sent by the server
 				var gameState = payload.split(":"); // split by ":" then use indices to set correct places
-				for(var i in gameState){
+				//for(var i in gameState){
 					//correct format will be "ballX:ballY:ballspeedX:ballspeedY:player1X:player1Y:player1speedX:player1speedY"
 					//index: 0 = ballX, 1 = ballY, 2 = ballspeedX, 3 = ballspeedY, 4 = player1X,
 					//5 = player1Y, 6 = player1speedX, 7 = player1speedY
-					log(gameState[i]);
-				}
+					//log(gameState[i]);
+				//}
+				ball.x = gameState[0];
+				ball.y = gameState[1];
+				ball.x_speed = gameState[2];
+				ball.y_speed = gameState[3];
+				player.paddle.x = gameState[4];
+				player.paddle.y = gameState[5];
+				player.paddle.x_speed = gameState[6];
+				player.paddle.y_speed = gameState[7];
+				document.getElementById('score').innerHTML = gameState[8];
 				
 			});
 
@@ -124,7 +135,7 @@
 <body>
 
     <div id='body'>
-        NickName   : <input type='text' id='nickName' name='nickName'>
+        NickName   : <input type='text' id='nickName' name='nick'>
         </br>
         Server IP  : <input type='text' id='ip' name='ip'>
         </br>
@@ -135,6 +146,8 @@
 	<div id ='game'>
 		<script src="Pong.js"></script>
 	</div>
+	<div id ='Scorediv'>
+		Score: <h1 id='score'>0</h1>
 	<div id='textarea'>
 		<textarea id='log' name='log' readonly='readonly'></textarea><br/>
 		<input type='text' id='message' name='message' />
