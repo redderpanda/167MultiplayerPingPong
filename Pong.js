@@ -164,28 +164,4 @@ window.addEventListener("keydown",function(event){
 window.addEventListener("keyup",function(event){
 	delete keysDown[event.keyCode];
 });
-var server;
-var WebSocketStuff = function(url){
-	var webSocket_url = url;
-	var conn;
 
-
-	this.disconnect = function() {
-		this.conn.close();
-	};
-
-	this.connect = function() {
-		if ( typeof(MozWebSocket) == 'function' )
-			this.conn = new MozWebSocket(url);
-		else
-			this.conn = new WebSocket(url);
-
-		// dispatch to the right handlers
-		this.conn.onmessage = function(evt){
-			dispatch('message', evt.data);
-		};
-
-		this.conn.onclose = function(){dispatch('close',null)}
-		this.conn.onopen = function(){dispatch('open',null)}
-	};
-};
