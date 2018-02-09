@@ -5,6 +5,7 @@
 #include <time.h>
 #include "websocket.h"
 #include <thread>
+#include <chrono>
 
 using namespace std;
 
@@ -24,6 +25,7 @@ struct Paddle {
 	Vector2 position;
 	int width = 50;
 	int height = 10;
+	Vector2 speed;
 };
 
 struct Player {
@@ -39,25 +41,67 @@ struct Arena {
 struct GameState {
 	Ball gameBall;
 
-	Player player1;
+	/*Player player1;
 	Player player2;
 	Player player3;
-	Player player4;
+	Player player4;*/
 };
 
 
 
 //need to set starting positions of each paddle
-Paddle paddle1;
+//Paddle paddle1;
+//
+//Paddle paddle2;
+//
+//Paddle paddle3;
+//
+//Paddle paddle4;
 
-Paddle paddle2;
+Player player1;
 
-Paddle paddle3;
+Player player2;
 
-Paddle paddle4;
+Player player_array[] = {player1};
 
-Paddle paddle_array[] = { paddle1,paddle2,paddle3,paddle4 };
 GameState LocalGamestate;
+
+//later change to function that looks through clientIDList to see if all players are present
+bool allConnected = false;
+
+void update() {
+	//playerUpdate_Pos(player1,SOME_RECIEVED_VALUE, SOME_RECIEVED_VALUE);
+	ball_update();
+}
+
+void playerUpdate_Pos(Player player, int x, int y) {
+	player.paddle.position.x += player.paddle.speed.x;
+	player.paddle.position.y += player.paddle.speed.y;
+	player.paddle.speed.x = 0;
+	player.paddle.speed.y = 0;
+
+	if (player.paddle.position.x < 0) {
+		player.paddle.position.x = 0;
+		player.paddle.speed.x = 0;
+	}
+	else if (player.paddle.position.x + player.paddle.width > 600) {
+		player.paddle.position.x = 600 - player.paddle.width;
+		player.paddle.speed.x = 0;
+	}
+}
+
+void setPlayerPos1(Player player) {
+	player.paddle.position.x = 270;
+	player.paddle.position.y = 580;
+}
+
+
+void setBall(int x, int y, int speed_x, int speed_y) {
+	LocalGamestate.gameBall.position.x = x;
+	LocalGamestate.gameBall.position.y = y;
+	LocalGamestate.gameBall.speed.x = speed_x;
+	LocalGamestate.gameBall.speed.y = speed_y;
+}
 
 void ball_update() {
 	LocalGamestate.gameBall.position.x += LocalGamestate.gameBall.speed.x;
@@ -92,6 +136,26 @@ void ball_update() {
 		LocalGamestate.gameBall.position.x = 300;
 		LocalGamestate.gameBall.position.y = 300;
 	}
+
+	if (top_y > 300) 
+	{
+		if (top_y < (player1.paddle.position.y + player1.paddle.height) && bottom_y > player1.paddle.position.y
+			&& top_x < (player1.paddle.position.x + player1.paddle.width) && bottom_x > player1.paddle.position.x)
+		{
+			LocalGamestate.gameBall.speed.y = -3;
+			LocalGamestate.gameBall.speed.x += (player1.paddle.speed.x / 2);
+			LocalGamestate.gameBall.position.y += LocalGamestate.gameBall.speed.y;
+		}
+	}
+	else {
+		if (top_y < (player2.paddle.position.y + player2.paddle.height) && bottom_y > player2.paddle.position.y
+			&& top_x < (player2.paddle.position.x + player2.paddle.width) && bottom_x > player2.paddle.position.x)
+		{
+			LocalGamestate.gameBall.speed.y = 3;
+			LocalGamestate.gameBall.speed.x += (player2.paddle.speed.x / 2);
+			LocalGamestate.gameBall.position.y += LocalGamestate.gameBall.speed.y;
+		}
+	}
 }
 
 void parse_player_message() {
@@ -105,44 +169,16 @@ std::string form_state_message() {
 
 /* called when a client connects */
 void openHandler(int clientID){
-	//forms welcome message
-    /*ostringstream os;
-    os << "Stranger " << clientID << " has joined.";*/
-
 	if (clientID == 0) {
-		LocalGamestate.player1.paddle.position.x = paddle_array[clientID].position.x;
-		LocalGamestate.player1.paddle.position.x = paddle_array[clientID].position.y;
-	}else if (clientID == 1) {
-		LocalGamestate.player2.paddle.position.x = paddle_array[clientID].position.x;
-		LocalGamestate.player2.paddle.position.x = paddle_array[clientID].position.y;
-	}else if (clientID == 2) {
-		LocalGamestate.player3.paddle.position.x = paddle_array[clientID].position.x;
-		LocalGamestate.player3.paddle.position.x = paddle_array[clientID].position.y;
-	}else if (clientID == 3) {
-		LocalGamestate.player4.paddle.position.x = paddle_array[clientID].position.x;
-		LocalGamestate.player4.paddle.position.x = paddle_array[clientID].position.y;
+		setPlayerPos1(player1);
+		allConnected = true;
+		setBall(300,300,0,3);
 	}
-	
-	//sends welcome message to all chatroom members
-    /*vector<int> clientIDs = server.getClientIDs();
-    for (int i = 0; i < clientIDs.size(); i++){
-        if (clientIDs[i] != clientID)
-            server.wsSend(clientIDs[i], os.str());
-    }
-    server.wsSend(clientID, "Welcome!");*/
 }
 
 
 /* called when a client disconnects */
 void closeHandler(int clientID){
-    ostringstream os;
-    os << "Stranger " << clientID << " has leaved.";
-
-    vector<int> clientIDs = server.getClientIDs();
-    for (int i = 0; i < clientIDs.size(); i++){
-        if (clientIDs[i] != clientID)
-            server.wsSend(clientIDs[i], os.str());
-    }
 }
 
 
@@ -160,58 +196,19 @@ void messageHandler(int clientID, string message){
 
 
 /* called once per select() loop */
-void periodicHandler(){
-	static clock_t clock_next = (clock() / CLOCKS_PER_SEC) + 5;
-	static float float_next = float (clock_next);
-
-	clock_t clock_current = clock()/CLOCKS_PER_SEC;
-	float float_current = float(clock_current);
-
-	time_t current = time(NULL);
-
-	if (float_current >= float_next) {
-		//Server Side Game Updates Go Here
-		//Create Packets
+void periodicHandler() {
+	static auto next = std::chrono::system_clock::now() + std::chrono::milliseconds(1000);
+	auto current = std::chrono::system_clock::now();
+	if (current >= next) {
+		//Update Gamestate Periodically
+		//Send Updated Message To Clients
 		ostringstream os;
-		char timecstring[26];
-		ctime_s(timecstring, sizeof(timecstring), &current);
-		string timestring(timecstring);
-		timestring = timestring.substr(0, timestring.size() - 1);
-		os << timestring;
-
+		os << "The message that requires sending";
 		vector<int> clientIDs = server.getClientIDs();
-
-		for (int i = 0; i < clientIDs.size(); i++) {
+		for (int i = 0; i < clientIDs.size(); i++)
 			server.wsSend(clientIDs[i], os.str());
-		}
-
-
-		float_next = float(clock()/CLOCKS_PER_SEC) + 0.5;
+		next = std::chrono::system_clock::now() + std::chrono::milliseconds(10);
 	}
-
-
-
-  //  static time_t next = time(NULL) + 10;
-  //  time_t current = time(NULL);
-  //  if (current >= next){
-		////Server Side Game Updates Go Here
-		////Create Packets
-  //      ostringstream os;
-		//	char timecstring[26];
-		//ctime_s(timecstring, sizeof(timecstring), &current);
-		//string timestring(timecstring);
-  //      timestring = timestring.substr(0, timestring.size() - 1);
-  //      os << timestring;
-
-  //      vector<int> clientIDs = server.getClientIDs();
-
-		//for (int i = 0; i < clientIDs.size(); i++) {
-		//	server.wsSend(clientIDs[i], os.str());
-		//}
-  //          
-
-  //      next = time(NULL) + 0.5;
-  //  }
 }
 
 
