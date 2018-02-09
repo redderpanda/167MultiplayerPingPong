@@ -12,8 +12,8 @@ using namespace std;
 webSocket server;
 
 struct Vector2 {
-	float x;
-	float y;
+	int x;
+	int y;
 };
 
 struct Ball {
@@ -69,12 +69,9 @@ GameState LocalGamestate;
 //later change to function that looks through clientIDList to see if all players are present
 bool allConnected = false;
 
-void update() {
-	//playerUpdate_Pos(player1,SOME_RECIEVED_VALUE, SOME_RECIEVED_VALUE);
-	ball_update();
-}
 
-void playerUpdate_Pos(Player player, int x, int y) {
+
+void playerUpdate_Pos(Player & player) {
 	player.paddle.position.x += player.paddle.speed.x;
 	player.paddle.position.y += player.paddle.speed.y;
 	player.paddle.speed.x = 0;
@@ -93,6 +90,7 @@ void playerUpdate_Pos(Player player, int x, int y) {
 void setPlayerPos1(Player player) {
 	player.paddle.position.x = 270;
 	player.paddle.position.y = 580;
+	//cout << "Player Position Set";
 }
 
 
@@ -115,7 +113,6 @@ void ball_update() {
 	{
 		LocalGamestate.gameBall.position.x = 5;
 		LocalGamestate.gameBall.speed.x = -LocalGamestate.gameBall.speed.x;
-
 	}
 	else if (bottom_x > 600) //hit right wall
 	{
@@ -135,6 +132,8 @@ void ball_update() {
 
 		LocalGamestate.gameBall.position.x = 300;
 		LocalGamestate.gameBall.position.y = 300;
+
+		player1.score = 0;
 	}
 
 	if (top_y > 300) 
@@ -143,8 +142,16 @@ void ball_update() {
 			&& top_x < (player1.paddle.position.x + player1.paddle.width) && bottom_x > player1.paddle.position.x)
 		{
 			LocalGamestate.gameBall.speed.y = -3;
-			LocalGamestate.gameBall.speed.x += (player1.paddle.speed.x / 2);
+			if (LocalGamestate.gameBall.position.x > (player1.paddle.position.x + 25)) {
+				//right
+				LocalGamestate.gameBall.speed.x +=  5;
+			}
+			if (LocalGamestate.gameBall.position.x < (player1.paddle.position.x + 25)) {
+				//left
+				LocalGamestate.gameBall.speed.x += -5;
+			}
 			LocalGamestate.gameBall.position.y += LocalGamestate.gameBall.speed.y;
+			player1.score += 1;
 		}
 	}
 	else {
@@ -158,19 +165,31 @@ void ball_update() {
 	}
 }
 
+void update() {
+	//playerUpdate_Pos(player1,SOME_RECIEVED_VALUE, SOME_RECIEVED_VALUE);
+	playerUpdate_Pos(player1);
+	//cout << "-------player pos--------" + std::to_string(player1.paddle.position.x) + std::to_string(player1.paddle.position.y);
+	ball_update();
+}
+
 void parse_player_message() {
 	//goes in message handler
+	
 }
 
 
 
-std::string form_state_message() {
-}
+//std::string form_state_message() {
+//}
 
 /* called when a client connects */
 void openHandler(int clientID){
 	if (clientID == 0) {
-		setPlayerPos1(player1);
+		//setPlayerPos1(player1);
+		player1.paddle.position.x = 270;
+		player1.paddle.position.y = 580;
+		player1.score = 0;
+		//cout << std::to_string(player1.paddle.position.x) + "--------" + std::to_string(player1.paddle.position.y);
 		allConnected = true;
 		setBall(300,300,0,3);
 	}
@@ -184,14 +203,32 @@ void closeHandler(int clientID){
 
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, string message){
-    ostringstream os;
-    os << "Stranger " << clientID << " says: " << message;
+	//set paddle/player values
 
-    vector<int> clientIDs = server.getClientIDs();
-    for (int i = 0; i < clientIDs.size(); i++){
+	if (clientID == 0) {
+		if (stoi(message) == 37) {
+			//left
+			//cout << "moved left";
+			player1.paddle.speed.x = -10;
+		}else if (stoi(message) == 39) {
+			//right
+			//cout << "moved right";
+			player1.paddle.speed.x = 10;
+		}else{
+			player1.name = message;
+			//std::cout << player1.name;
+		}
+	}
+
+    /*ostringstream os;
+    os << "Stranger " << clientID << " says: " << message;*/
+
+    /*vector<int> clientIDs = server.getClientIDs();*/
+
+    /*for (int i = 0; i < clientIDs.size(); i++){
         if (clientIDs[i] != clientID)
             server.wsSend(clientIDs[i], os.str());
-    }
+    }*/
 }
 
 
@@ -201,12 +238,22 @@ void periodicHandler() {
 	auto current = std::chrono::system_clock::now();
 	if (current >= next) {
 		//Update Gamestate Periodically
+		update();
+		
 		//Send Updated Message To Clients
+		//ballinfo,playerinfo,score
+		std::string update_string = 
+			std::to_string(LocalGamestate.gameBall.position.x) + ":" + std::to_string(LocalGamestate.gameBall.position.y) +
+			":" + std::to_string(LocalGamestate.gameBall.speed.x) + ":" + std::to_string(LocalGamestate.gameBall.speed.y) + ":" +
+			std::to_string(player1.paddle.position.x) + ":" + std::to_string(player1.paddle.position.y) + ":" + std::to_string(player1.paddle.speed.x)
+			+ ":" + std::to_string(player1.paddle.speed.y) + ":" + std::to_string(player1.score);
+
 		ostringstream os;
-		os << "The message that requires sending";
+		os << update_string;
 		vector<int> clientIDs = server.getClientIDs();
 		for (int i = 0; i < clientIDs.size(); i++)
 			server.wsSend(clientIDs[i], os.str());
+
 		next = std::chrono::system_clock::now() + std::chrono::milliseconds(10);
 	}
 }
