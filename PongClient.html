@@ -56,6 +56,8 @@
         			log("press down arrow");
         			send(40); // send to server
         		}
+        		log("ballX:ballY:ballspeedX:ballspeedY:player1X:player1Y:player1speedX:player1speedY");//test code
+        		send("ballX:ballY:ballspeedX:ballspeedY:player1X:player1Y:player1speedX:player1speedY");
         	});
         }
 
@@ -99,7 +101,9 @@
 			Server.bind('message', function( payload ) { //parse through the gamestate sent by the server
 				var gameState = payload.split(":"); // split by ":" then use indices to set correct places
 				for(var i in gameState){
-					//correct format will be "ballx:bally:ballspeedx:ballspeedy:"
+					//correct format will be "ballX:ballY:ballspeedX:ballspeedY:player1X:player1Y:player1speedX:player1speedY"
+					//index: 0 = ballX, 1 = ballY, 2 = ballspeedX, 3 = ballspeedY, 4 = player1X,
+					//5 = player1Y, 6 = player1speedX, 7 = player1speedY
 					log(gameState[i]);
 				}
 				
