@@ -38,9 +38,25 @@
 		function send( text ) {
 			Server.send( 'message', text );
 		}
-		function runFunction(){
-        	send(ball.x);
-        	send(ball.y);
+		function runFunction(){ // function to be run a certain amount of times per millisecond
+        	$(document).keydown(function(e){ // check if a key is pressed
+        		if(e.keyCode == 37){ // left arrow
+        			log("press left arrow");
+        			send(37); // send to server
+        		}
+        		if(e.keyCode == 38){ //up arroww
+        			log("press left arrow");
+        			send(38)
+        		}
+        		if(e.keyCode == 39){ // right arrow
+        			log("press right arrow");
+        			send(39); // send to server
+        		}
+        		if(e.keyCode == 40){ // down arrow
+        			log("press down arrow");
+        			send(40); // send to server
+        		}
+        	});
         }
 
         function connect(){
@@ -51,20 +67,20 @@
 
 			Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + portVal.value);
 
-			$('#message').keypress(function(e) {
-				if ( e.keyCode == 13 && this.value ) {
-					log( 'You: ' + this.value );
-					log('You ' + ball.x);
-					log('You ' + ball.y);
-					send( this.value );
-					send(ball.x);
-					send(ball.y);
+			// $('#message').keypress(function(e) {
+			// 	if ( e.keyCode == 13 && this.value ) {
+			// 		log( 'You: ' + this.value );
+			// 		log('You ' + ball.x);
+			// 		log('You ' + ball.y);
+			// 		send( this.value );
+			// 		send(ball.x + ":" + ball.y);
 
-					$(this).val('');
-				}
-			});
+			// 		$(this).val('');
+			// 	}
+			// });
+
 			$(function(){
-				setInterval(runFunction,100);
+				setInterval(runFunction,10000); // called every 10000 milliseconds (10seconds)? seems to act faster though
 			});
 
 			//Let the user know we're connected
@@ -80,8 +96,13 @@
 			});
 
 			//Log any messages sent from server
-			Server.bind('message', function( payload ) {
-				log( payload );
+			Server.bind('message', function( payload ) { //parse through the gamestate sent by the server
+				var gameState = payload.split(":"); // split by ":" then use indices to set correct places
+				for(var i in gameState){
+					//correct format will be "ballx:bally:ballspeedx:ballspeedy:"
+					log(gameState[i]);
+				}
+				
 			});
 
 			Server.connect();
