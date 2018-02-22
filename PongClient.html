@@ -96,13 +96,13 @@
 			Server.bind('open', function() {
                 document.getElementById("playB").disabled = true;
                 //send(document.getElementById('nickName').value);
-				//log( "Connected." );
+				log( "Connected." );
 			});
 
 			//OH NOES! Disconnection occurred.
 			Server.bind('close', function( data ) {
                 document.getElementById("playB").disabled = false;
-				//log( "Disconnected." );
+				log( "Disconnected." );
 			});
 
 			//Log any messages sent from server
@@ -115,6 +115,8 @@
 					//index: 0 = ballX, 1 = ballY, 2 = ballspeedX, 3 = ballspeedY, 4 = player1X,
 					//5 = player1Y, 6 = player1speedX, 7 = player1speedY, 8 = player1score, 9 = player1name
 					//10 = player2X, 11 = player2Y, 12 = player2speedX, 13 = player2speedY, 14 = player2score, 15 = player2name
+					//16 = player3X, 17 = player3Y, 18 = player3speedX, 19 = player3speedY, 20 = player3score, 21 = player3name
+					//22 = player4X, 23 = player4Y, 24 = player4speedX, 25 = player4speedY, 26 = player4score, 27 = player4name
 
 					//log(gameState[i]);
 				//}
@@ -126,12 +128,27 @@
 				player.paddle.y = gameState[5];
 				player.paddle.x_speed = gameState[6];
 				player.paddle.y_speed = gameState[7];
-				document.getElementById('score').innerHTML =  gameState[9] + ":" + gameState[8] " , " + gameState[15] + ":" + gameState[14];
+				//document.getElementById('score').innerHTML = gameState[9] + ":" +  gameState[8];
+				document.getElementById('score').innerHTML =  
+				gameState[9] + ":" + gameState[8] + " , " + 
+				gameState[15] + ":" + gameState[14] + " , " + 
+				gameState[21] + ":" + gameState[20] + " , " +
+				gameState[27] + ":" + gameState[26];
 
 				player2.paddle.x = gameState[10];
 				player2.paddle.y = gameState[11];
 				player2.paddle.x_speed = gameState[12];
 				player2.paddle.y_speed = gameState[13];
+
+				player3.paddle.x = gameState[16];
+				player3.paddle.y = gameState[17];
+				player3.paddle.x_speed = gameState[18];
+				player3.paddle.y_speed = gameState[19];
+
+				player4.paddle.x = gameState[22];
+				player4.paddle.y = gameState[23];
+				player4.paddle.x_speed = gameState[24];
+				player4.paddle.y_speed = gameState[25];
 				
 			});
 
@@ -140,7 +157,7 @@
 
         function disconnect(){
         	Server.disconnect();
-        	//log("Disconnecting...");
+        	log("Disconnecting...");
         }
 
     </script>
@@ -162,10 +179,10 @@
 		<script src="Pong.js"></script>
 	</div>
 	<div id ='Scorediv'>
-		Score: <h1 id='score'>0</h1>
+		Score: <h1 id='score'>player1:0, player2:0, player3:0, player4:0</h1>
 	<div id='textarea'>
-<!-- 		<textarea id='log' name='log' readonly='readonly'></textarea><br/>
-		<input type='text' id='message' name='message' /> -->
+		<textarea id='log' name='log' readonly='readonly'></textarea><br/>
+		<input type='text' id='message' name='message' />
 	</div>
 
 </body>

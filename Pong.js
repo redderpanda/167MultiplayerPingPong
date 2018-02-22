@@ -10,6 +10,8 @@ canvas.height = height;
 var context = canvas.getContext('2d');
 var player = new Player();
 var player2 = new Player2();
+var player3 = new Player3();
+var player4 = new Player4();
 var ball = new Ball(300,300);
 
 var keysDown = {};
@@ -24,6 +26,8 @@ var render = function(){
 	context.fillRect(0,0,width,height);
 	player.render();
 	player2.render();
+	player3.render();
+	player4.render();
 	ball.render();
 };
 
@@ -67,6 +71,24 @@ Paddle.prototype.move = function(x,y){
 		this.x = 600 - this.width;
 		this.x_speed = 0;
 	}
+};
+
+function Player4(){
+	this.paddle = new Paddle(580,270,10,50);
+}
+
+Player4.prototype.render = function()
+{
+	this.paddle.render();
+};
+
+function Player3(){
+	this.paddle = new Paddle(10,270,10,50);
+}
+
+Player3.prototype.render = function()
+{
+	this.paddle.render();
 };
 
 function Player2(){
