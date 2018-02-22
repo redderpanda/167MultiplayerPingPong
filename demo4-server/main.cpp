@@ -7,7 +7,11 @@
 #include <thread>
 #include <chrono>
 
+
 using namespace std;
+string ID_array[4];
+int Player_Count = 0;
+
 
 webSocket server;
 
@@ -62,7 +66,11 @@ Player player1;
 
 Player player2;
 
-Player player_array[] = {player1};
+Player player3;
+
+Player player4;
+
+Player player_array[] = {player1, player2, player3, player4};
 
 GameState LocalGamestate;
 
@@ -119,13 +127,13 @@ void ball_update() {
 		LocalGamestate.gameBall.position.x = 595;
 		LocalGamestate.gameBall.speed.x = -LocalGamestate.gameBall.speed.x;
 	}
-	else if (top_y < 0) 
+	else if (top_y < 0) //hit top wall player 2
 	{
 		LocalGamestate.gameBall.position.y = 5;
 		LocalGamestate.gameBall.speed.y = -LocalGamestate.gameBall.speed.y;
 	}
 
-	if (LocalGamestate.gameBall.position.y > 600) 
+	if (LocalGamestate.gameBall.position.y > 600) //hit bot wall player 1
 	{
 		LocalGamestate.gameBall.speed.x = 0;
 		LocalGamestate.gameBall.speed.y = 3;
@@ -168,11 +176,12 @@ void ball_update() {
 void update() {
 	//playerUpdate_Pos(player1,SOME_RECIEVED_VALUE, SOME_RECIEVED_VALUE);
 	playerUpdate_Pos(player1);
+	playerUpdate_Pos(player2);
 	//cout << "-------player pos--------" + std::to_string(player1.paddle.position.x) + std::to_string(player1.paddle.position.y);
 	ball_update();
 }
 
-void parse_player_message() {
+void parse_player_message(string message) {
 	//goes in message handler
 	
 }
@@ -190,8 +199,38 @@ void openHandler(int clientID){
 		player1.paddle.position.y = 580;
 		player1.score = 0;
 		//cout << std::to_string(player1.paddle.position.x) + "--------" + std::to_string(player1.paddle.position.y);
-		allConnected = true;
+		Player_Count += 1;
 		setBall(300,300,0,3);
+	}
+	if (clientID == 1) {
+		//setPlayerPos1(player1);
+		player2.paddle.position.x = 270;
+		player2.paddle.position.y = 20;
+		player2.score = 0;
+		//cout << std::to_string(player1.paddle.position.x) + "--------" + std::to_string(player1.paddle.position.y);
+		Player_Count += 1;
+		//setBall(300, 300, 0, 3);
+	}
+	if (clientID == 2) {
+		//setPlayerPos1(player1);
+		player3.paddle.position.x = 580;
+		player3.paddle.position.y = 270;
+		player3.score = 0;
+		//cout << std::to_string(player1.paddle.position.x) + "--------" + std::to_string(player1.paddle.position.y);
+		Player_Count += 1;
+		//setBall(300, 300, 0, 3);
+	}
+	if (clientID == 3) {
+		//setPlayerPos1(player1);
+		player4.paddle.position.x = 20;
+		player4.paddle.position.y = 270;
+		player4.score = 0;
+		//cout << std::to_string(player1.paddle.position.x) + "--------" + std::to_string(player1.paddle.position.y);
+		Player_Count += 1;
+		//setBall(300, 300, 0, 3);
+	}
+	if (Player_Count == 4) {
+		allConnected = true;
 	}
 }
 
@@ -204,20 +243,38 @@ void closeHandler(int clientID){
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, string message){
 	//set paddle/player values
+	string move = message.substr(0, 2);
+	string name = message.substr(3, message.length());
 
 	if (clientID == 0) {
-		if (stoi(message) == 37) {
+		if (stoi(move) == 37) {
 			//left
 			//cout << "moved left";
 			player1.paddle.speed.x = -10;
-		}else if (stoi(message) == 39) {
+		}else if (stoi(move) == 39) {
 			//right
 			//cout << "moved right";
 			player1.paddle.speed.x = 10;
-		}else{
-			player1.name = message;
-			//std::cout << player1.name;
 		}
+
+		player1.name = name;
+		//std::cout << name;
+	}
+
+	if (clientID == 1) {
+		if (stoi(move) == 37) {
+			//left
+			//cout << "moved left";
+			player2.paddle.speed.x = -10;
+		}
+		else if (stoi(move) == 39) {
+			//right
+			//cout << "moved right";
+			player2.paddle.speed.x = 10;
+		}
+
+		player2.name = name;
+		//std::cout << name;
 	}
 
     /*ostringstream os;
@@ -236,6 +293,7 @@ void messageHandler(int clientID, string message){
 void periodicHandler() {
 	static auto next = std::chrono::system_clock::now() + std::chrono::milliseconds(1000);
 	auto current = std::chrono::system_clock::now();
+	
 	if (current >= next) {
 		//Update Gamestate Periodically
 		update();
@@ -245,8 +303,12 @@ void periodicHandler() {
 		std::string update_string = 
 			std::to_string(LocalGamestate.gameBall.position.x) + ":" + std::to_string(LocalGamestate.gameBall.position.y) +
 			":" + std::to_string(LocalGamestate.gameBall.speed.x) + ":" + std::to_string(LocalGamestate.gameBall.speed.y) + ":" +
+
 			std::to_string(player1.paddle.position.x) + ":" + std::to_string(player1.paddle.position.y) + ":" + std::to_string(player1.paddle.speed.x)
-			+ ":" + std::to_string(player1.paddle.speed.y) + ":" + std::to_string(player1.score);
+			+ ":" + std::to_string(player1.paddle.speed.y) + ":" + std::to_string(player1.score) + ":" + player1.name + ":" +
+
+			std::to_string(player2.paddle.position.x) + ":" + std::to_string(player2.paddle.position.y) + ":" + std::to_string(player2.paddle.speed.x)
+			+ ":" + std::to_string(player2.paddle.speed.y) + ":" + std::to_string(player2.score) + ":" + player2.name;
 
 		ostringstream os;
 		os << update_string;
