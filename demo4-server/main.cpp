@@ -85,13 +85,26 @@ void playerUpdate_Pos(Player & player) {
 	player.paddle.speed.x = 0;
 	player.paddle.speed.y = 0;
 
-	if (player.paddle.position.x < 0) {
-		player.paddle.position.x = 0;
-		player.paddle.speed.x = 0;
+	if (player.paddle.width == 50) {
+		if (player.paddle.position.x < 0) {
+			player.paddle.position.x = 0;
+			player.paddle.speed.x = 0;
+		}
+		else if (player.paddle.position.x + player.paddle.width > 600) {
+			player.paddle.position.x = 600 - player.paddle.width;
+			player.paddle.speed.x = 0;
+		}
 	}
-	else if (player.paddle.position.x + player.paddle.width > 600) {
-		player.paddle.position.x = 600 - player.paddle.width;
-		player.paddle.speed.x = 0;
+	
+	if (player.paddle.width == 10) {
+		if (player.paddle.position.y < 0) {
+			player.paddle.position.y = 0;
+			player.paddle.speed.y = 0;
+		}
+		else if (player.paddle.position.y + player.paddle.height > 600) {
+			player.paddle.position.x = 600 - player.paddle.height;
+			player.paddle.speed.x = 0;
+		}
 	}
 }
 
@@ -117,26 +130,41 @@ void ball_update() {
 	int bottom_x = LocalGamestate.gameBall.position.x + 5;
 	int bottom_y = LocalGamestate.gameBall.position.y + 5;
 
-	if (top_x < 0) //hit left wall
+	if (top_x < 0) //hit left wall player 4
 	{
 		LocalGamestate.gameBall.position.x = 5;
 		LocalGamestate.gameBall.speed.x = -LocalGamestate.gameBall.speed.x;
+
+		LocalGamestate.gameBall.position.x = 300;
+		LocalGamestate.gameBall.position.y = 300;
+
+		player4.score = 0;
 	}
-	else if (bottom_x > 600) //hit right wall
+	else if (bottom_x > 600) //hit right wall player 3
 	{
 		LocalGamestate.gameBall.position.x = 595;
 		LocalGamestate.gameBall.speed.x = -LocalGamestate.gameBall.speed.x;
+
+		LocalGamestate.gameBall.position.x = 300;
+		LocalGamestate.gameBall.position.y = 300;
+
+		player3.score = 0;
 	}
 	else if (top_y < 0) //hit top wall player 2
 	{
 		LocalGamestate.gameBall.position.y = 5;
 		LocalGamestate.gameBall.speed.y = -LocalGamestate.gameBall.speed.y;
+
+		LocalGamestate.gameBall.position.x = 300;
+		LocalGamestate.gameBall.position.y = 300;
+
+		player2.score = 0;
 	}
 
 	if (LocalGamestate.gameBall.position.y > 600) //hit bot wall player 1
 	{
 		LocalGamestate.gameBall.speed.x = 0;
-		LocalGamestate.gameBall.speed.y = 3;
+		LocalGamestate.gameBall.speed.y = -LocalGamestate.gameBall.speed.y;
 
 		LocalGamestate.gameBall.position.x = 300;
 		LocalGamestate.gameBall.position.y = 300;
@@ -145,7 +173,7 @@ void ball_update() {
 	}
 
 	if (top_y > 300) 
-	{
+	{	//player1
 		if (top_y < (player1.paddle.position.y + player1.paddle.height) && bottom_y > player1.paddle.position.y
 			&& top_x < (player1.paddle.position.x + player1.paddle.width) && bottom_x > player1.paddle.position.x)
 		{
@@ -162,13 +190,59 @@ void ball_update() {
 			player1.score += 1;
 		}
 	}
-	else {
+	else {//player2
 		if (top_y < (player2.paddle.position.y + player2.paddle.height) && bottom_y > player2.paddle.position.y
 			&& top_x < (player2.paddle.position.x + player2.paddle.width) && bottom_x > player2.paddle.position.x)
 		{
 			LocalGamestate.gameBall.speed.y = 3;
-			LocalGamestate.gameBall.speed.x += (player2.paddle.speed.x / 2);
+			if (LocalGamestate.gameBall.position.x > (player2.paddle.position.x + 25)) {
+				//right
+				LocalGamestate.gameBall.speed.x += 5;
+			}
+			if (LocalGamestate.gameBall.position.x < (player2.paddle.position.x + 25)) {
+				//left
+				LocalGamestate.gameBall.speed.x += -5;
+			}
+			//LocalGamestate.gameBall.speed.x += (player2.paddle.speed.x / 2);
 			LocalGamestate.gameBall.position.y += LocalGamestate.gameBall.speed.y;
+			player2.score += 1;
+		}
+	}
+
+	if (top_x > 300)
+	{ //player 3
+		if (top_y < (player3.paddle.position.y + player3.paddle.height) && bottom_y > player3.paddle.position.y
+			&& top_x < (player3.paddle.position.x + player3.paddle.width) && bottom_x > player3.paddle.position.x)
+		{
+			LocalGamestate.gameBall.speed.x = -3;
+			if (LocalGamestate.gameBall.position.y > (player3.paddle.position.y + 25)) {
+				//right
+				LocalGamestate.gameBall.speed.x += 5;
+			}
+			if (LocalGamestate.gameBall.position.y < (player1.paddle.position.y + 25)) {
+				//left
+				LocalGamestate.gameBall.speed.x += -5;
+			}
+			LocalGamestate.gameBall.position.x += LocalGamestate.gameBall.speed.x;
+			player4.score += 1;
+		}
+	}
+	else {
+		//player 4
+		if (top_y < (player4.paddle.position.y + player4.paddle.height) && bottom_y > player4.paddle.position.y
+			&& top_x < (player4.paddle.position.x + player4.paddle.width) && bottom_x > player4.paddle.position.x)
+		{
+			LocalGamestate.gameBall.speed.x = 3;
+			if (LocalGamestate.gameBall.position.y > (player4.paddle.position.y + 25)) {
+				//right
+				LocalGamestate.gameBall.speed.x += 5;
+			}
+			if (LocalGamestate.gameBall.position.y < (player4.paddle.position.y + 25)) {
+				//left
+				LocalGamestate.gameBall.speed.x += -5;
+			}
+			LocalGamestate.gameBall.position.x += LocalGamestate.gameBall.speed.x;
+			player3.score += 1;
 		}
 	}
 }
@@ -177,6 +251,8 @@ void update() {
 	//playerUpdate_Pos(player1,SOME_RECIEVED_VALUE, SOME_RECIEVED_VALUE);
 	playerUpdate_Pos(player1);
 	playerUpdate_Pos(player2);
+	playerUpdate_Pos(player3);
+	playerUpdate_Pos(player4);
 	//cout << "-------player pos--------" + std::to_string(player1.paddle.position.x) + std::to_string(player1.paddle.position.y);
 	ball_update();
 }
@@ -201,6 +277,7 @@ void openHandler(int clientID){
 		//cout << std::to_string(player1.paddle.position.x) + "--------" + std::to_string(player1.paddle.position.y);
 		Player_Count += 1;
 		setBall(300,300,0,3);
+		//std::cout << "why";
 	}
 	if (clientID == 1) {
 		//setPlayerPos1(player1);
@@ -213,15 +290,20 @@ void openHandler(int clientID){
 	}
 	if (clientID == 2) {
 		//setPlayerPos1(player1);
+		player3.paddle.height = 50;
+		player3.paddle.width = 10;
 		player3.paddle.position.x = 580;
 		player3.paddle.position.y = 270;
 		player3.score = 0;
 		//cout << std::to_string(player1.paddle.position.x) + "--------" + std::to_string(player1.paddle.position.y);
 		Player_Count += 1;
 		//setBall(300, 300, 0, 3);
+		//allConnected = true;
 	}
 	if (clientID == 3) {
 		//setPlayerPos1(player1);
+		player4.paddle.height = 50;
+		player4.paddle.width = 10;
 		player4.paddle.position.x = 20;
 		player4.paddle.position.y = 270;
 		player4.score = 0;
@@ -277,6 +359,38 @@ void messageHandler(int clientID, string message){
 		//std::cout << name;
 	}
 
+	if (clientID == 2) {
+		if (stoi(move) == 38) {
+			//up
+			//cout << "moved left";
+			player3.paddle.speed.y = -10;
+		}
+		else if (stoi(move) == 40) {
+			//down
+			//cout << "moved right";
+			player3.paddle.speed.y = 10;
+		}
+
+		player3.name = name;
+		//std::cout << name;
+	}
+
+	if (clientID == 3) {
+		if (stoi(move) == 38) {
+			//up
+			//cout << "moved left";
+			player4.paddle.speed.y = -10;
+		}
+		else if (stoi(move) == 40) {
+			//down
+			//cout << "moved right";
+			player4.paddle.speed.y = 10;
+		}
+
+		player4.name = name;
+		//std::cout << name;
+	}
+
     /*ostringstream os;
     os << "Stranger " << clientID << " says: " << message;*/
 
@@ -308,7 +422,13 @@ void periodicHandler() {
 			+ ":" + std::to_string(player1.paddle.speed.y) + ":" + std::to_string(player1.score) + ":" + player1.name + ":" +
 
 			std::to_string(player2.paddle.position.x) + ":" + std::to_string(player2.paddle.position.y) + ":" + std::to_string(player2.paddle.speed.x)
-			+ ":" + std::to_string(player2.paddle.speed.y) + ":" + std::to_string(player2.score) + ":" + player2.name;
+			+ ":" + std::to_string(player2.paddle.speed.y) + ":" + std::to_string(player2.score) + ":" + player2.name
+			
+			+ ":" + std::to_string(player3.paddle.position.x) + ":" + std::to_string(player3.paddle.position.y) + ":" + std::to_string(player3.paddle.speed.x)
+			+ ":" + std::to_string(player3.paddle.speed.y) + ":" + std::to_string(player3.score) + ":" + player3.name
+			
+			+ ":" + std::to_string(player4.paddle.position.x) + ":" + std::to_string(player4.paddle.position.y) + ":" + std::to_string(player4.paddle.speed.x)
+			+ ":" + std::to_string(player4.paddle.speed.y) + ":" + std::to_string(player4.score) + ":" + player4.name;
 
 		ostringstream os;
 		os << update_string;
