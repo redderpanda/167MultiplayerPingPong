@@ -42,19 +42,19 @@
         	$(document).keydown(function(e){ // check if a key is pressed
         		if(e.keyCode == 37){ // left arrow
         			//log("press left arrow");
-        			send(37); // send to server
+        			send("37:" + document.getElementById('nickName').value); // send to server
         		}
         		if(e.keyCode == 38){ //up arroww
         			//log("press up arrow");
-        			send(38)
+        			send("38:" + document.getElementById('nickName').value)
         		}
         		if(e.keyCode == 39){ // right arrow
         			//log("press right arrow");
-        			send(39); // send to server
+        			send("39:" + document.getElementById('nickName').value); // send to server
         		}
         		if(e.keyCode == 40){ // down arrow
         			//log("press down arrow");
-        			send(40); // send to server
+        			send("40:" + document.getElementById('nickName').value); // send to server
         		}
 
         	}
@@ -62,7 +62,7 @@
         }
 
         function connect(){
-            log('Connecting...');
+            //log('Connecting...');
 
             var portVal = document.createElement("portVal");
             portVal.value = '1000';
@@ -81,8 +81,14 @@
 			// 	}
 			// });
 			//send(document.getElementById('nickName').value);
-
+			
 			$(function(){
+				//send(document.getElementById('nickName').value);
+				// if(sentNickName == false)
+				// {
+				// 	send();
+				// 	sentNickName = true;
+				// }
 				setInterval(runFunction,1000); // called every 500 milliseconds (0.5seconds)? seems to act faster though
 			});
 
@@ -90,22 +96,26 @@
 			Server.bind('open', function() {
                 document.getElementById("playB").disabled = true;
                 //send(document.getElementById('nickName').value);
-				log( "Connected." );
+				//log( "Connected." );
 			});
 
 			//OH NOES! Disconnection occurred.
 			Server.bind('close', function( data ) {
                 document.getElementById("playB").disabled = false;
-				log( "Disconnected." );
+				//log( "Disconnected." );
 			});
 
 			//Log any messages sent from server
 			Server.bind('message', function( payload ) { //parse through the gamestate sent by the server
 				var gameState = payload.split(":"); // split by ":" then use indices to set correct places
 				//for(var i in gameState){
-					//correct format will be "ballX:ballY:ballspeedX:ballspeedY:player1X:player1Y:player1speedX:player1speedY"
+					//correct format will be "ballX:ballY:ballspeedX:ballspeedY:player1X:player1Y:player1speedX:player1speedY:player1score:player1name:
+					//player2X:player2Y:player2speedX:player2speedY:player2score:player2name"
+
 					//index: 0 = ballX, 1 = ballY, 2 = ballspeedX, 3 = ballspeedY, 4 = player1X,
-					//5 = player1Y, 6 = player1speedX, 7 = player1speedY
+					//5 = player1Y, 6 = player1speedX, 7 = player1speedY, 8 = player1score, 9 = player1name
+					//10 = player2X, 11 = player2Y, 12 = player2speedX, 13 = player2speedY, 14 = player2score, 15 = player2name
+
 					//log(gameState[i]);
 				//}
 				ball.x = gameState[0];
@@ -116,7 +126,12 @@
 				player.paddle.y = gameState[5];
 				player.paddle.x_speed = gameState[6];
 				player.paddle.y_speed = gameState[7];
-				document.getElementById('score').innerHTML = gameState[8];
+				document.getElementById('score').innerHTML =  gameState[9] + ":" + gameState[8] " , " + gameState[15] + ":" + gameState[14];
+
+				player2.paddle.x = gameState[10];
+				player2.paddle.y = gameState[11];
+				player2.paddle.x_speed = gameState[12];
+				player2.paddle.y_speed = gameState[13];
 				
 			});
 
@@ -125,7 +140,7 @@
 
         function disconnect(){
         	Server.disconnect();
-        	log("Disconnecting...");
+        	//log("Disconnecting...");
         }
 
     </script>
@@ -149,8 +164,8 @@
 	<div id ='Scorediv'>
 		Score: <h1 id='score'>0</h1>
 	<div id='textarea'>
-		<textarea id='log' name='log' readonly='readonly'></textarea><br/>
-		<input type='text' id='message' name='message' />
+<!-- 		<textarea id='log' name='log' readonly='readonly'></textarea><br/>
+		<input type='text' id='message' name='message' /> -->
 	</div>
 
 </body>

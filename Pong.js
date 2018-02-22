@@ -23,7 +23,7 @@ var render = function(){
 	context.fillStyle = "#00FBF2";
 	context.fillRect(0,0,width,height);
 	player.render();
-	//player2.render();
+	player2.render();
 	ball.render();
 };
 
