@@ -40,21 +40,21 @@
 		}
 		function runFunction(){ // function to be run a certain amount of times per millisecond
         	$(document).keydown(function(e){ // check if a key is pressed
-        		if(e.keyCode == 37){ // left arrow
+        		if(e.keyCode == 65){ // a key
         			//log("press left arrow");
-        			send("37:" + document.getElementById('nickName').value); // send to server
+        			send("65:" + document.getElementById('nickName').value); // send to server
         		}
-        		if(e.keyCode == 38){ //up arroww
+        		if(e.keyCode == 87){ //w key
         			//log("press up arrow");
-        			send("38:" + document.getElementById('nickName').value)
+        			send("87:" + document.getElementById('nickName').value)
         		}
-        		if(e.keyCode == 39){ // right arrow
+        		if(e.keyCode == 68){ // d key
         			//log("press right arrow");
-        			send("39:" + document.getElementById('nickName').value); // send to server
+        			send("68:" + document.getElementById('nickName').value); // send to server
         		}
-        		if(e.keyCode == 40){ // down arrow
+        		if(e.keyCode == 83){ // s key
         			//log("press down arrow");
-        			send("40:" + document.getElementById('nickName').value); // send to server
+        			send("83:" + document.getElementById('nickName').value); // send to server
         		}
 
         	}
@@ -96,13 +96,13 @@
 			Server.bind('open', function() {
                 document.getElementById("playB").disabled = true;
                 //send(document.getElementById('nickName').value);
-				log( "Connected." );
+				//log( "Connected." );
 			});
 
 			//OH NOES! Disconnection occurred.
 			Server.bind('close', function( data ) {
                 document.getElementById("playB").disabled = false;
-				log( "Disconnected." );
+				//log( "Disconnected." );
 			});
 
 			//Log any messages sent from server
@@ -157,7 +157,7 @@
 
         function disconnect(){
         	Server.disconnect();
-        	log("Disconnecting...");
+        	//log("Disconnecting...");
         }
 
     </script>
@@ -168,21 +168,20 @@
 
     <div id='body'>
         NickName   : <input type='text' id='nickName' name='nick'>
-        </br>
         Server IP  : <input type='text' id='ip' name='ip'>
         </br>
         <button type='button' id='playB' onclick="connect();">Play</button>
-        </br>
+        
         <button type='button' id='disB' onclick="disconnect();">Disconnect</button>
     </div>
 	<div id ='game'>
 		<script src="Pong.js"></script>
 	</div>
 	<div id ='Scorediv'>
-		Score: <h1 id='score'>player1:0, player2:0, player3:0, player4:0</h1>
+		<h1 id='score'>player1:0, player2:0, player3:0, player4:0</h1>
 	<div id='textarea'>
-		<textarea id='log' name='log' readonly='readonly'></textarea><br/>
-		<input type='text' id='message' name='message' />
+<!-- 		<textarea id='log' name='log' readonly='readonly'></textarea><br/>
+		<input type='text' id='message' name='message' /> -->
 	</div>
 
 </body>
