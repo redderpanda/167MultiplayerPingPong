@@ -23,6 +23,7 @@ struct Vector2 {
 struct Ball {
 	Vector2 position;
 	Vector2 speed;
+	int lastHit = 0;
 };
 
 struct Paddle {
@@ -77,7 +78,23 @@ GameState LocalGamestate;
 //later change to function that looks through clientIDList to see if all players are present
 bool allConnected = false;
 
-
+void Score() {
+	if (LocalGamestate.gameBall.lastHit == 1) {
+		player1.score += 1;
+	}
+	else if (LocalGamestate.gameBall.lastHit == 2) {
+		player2.score += 1;
+	}
+	else if (LocalGamestate.gameBall.lastHit == 3) {
+		player3.score += 1;
+	}
+	else if (LocalGamestate.gameBall.lastHit == 4) {
+		player4.score += 1;
+	}
+	else {
+		//do nothing
+	}
+}
 
 void playerUpdate_Pos(Player & player) {
 	player.paddle.position.x += player.paddle.speed.x;
@@ -102,8 +119,8 @@ void playerUpdate_Pos(Player & player) {
 			player.paddle.speed.y = 0;
 		}
 		else if (player.paddle.position.y + player.paddle.height > 600) {
-			player.paddle.position.x = 600 - player.paddle.height;
-			player.paddle.speed.x = 0;
+			player.paddle.position.y = 600 - player.paddle.height;
+			player.paddle.speed.y = 0;
 		}
 	}
 }
@@ -132,44 +149,48 @@ void ball_update() {
 
 	if (top_x < 0) //hit left wall player 4
 	{
-		LocalGamestate.gameBall.position.x = 5;
-		LocalGamestate.gameBall.speed.x = -LocalGamestate.gameBall.speed.x;
+		LocalGamestate.gameBall.speed.y = 0;
+		LocalGamestate.gameBall.speed.x = -3;
 
 		LocalGamestate.gameBall.position.x = 300;
 		LocalGamestate.gameBall.position.y = 300;
 
-		player4.score = 0;
+		Score();
+		LocalGamestate.gameBall.lastHit = 0;
 	}
 	else if (bottom_x > 600) //hit right wall player 3
 	{
-		LocalGamestate.gameBall.position.x = 595;
-		LocalGamestate.gameBall.speed.x = -LocalGamestate.gameBall.speed.x;
+		LocalGamestate.gameBall.speed.y = 0;
+		LocalGamestate.gameBall.speed.x = 3;
 
 		LocalGamestate.gameBall.position.x = 300;
 		LocalGamestate.gameBall.position.y = 300;
 
-		player3.score = 0;
+		Score();
+		LocalGamestate.gameBall.lastHit = 0;
 	}
 	else if (top_y < 0) //hit top wall player 2
 	{
-		LocalGamestate.gameBall.position.y = 5;
-		LocalGamestate.gameBall.speed.y = -LocalGamestate.gameBall.speed.y;
+		LocalGamestate.gameBall.speed.x = 0;
+		LocalGamestate.gameBall.speed.y = -3;
 
 		LocalGamestate.gameBall.position.x = 300;
 		LocalGamestate.gameBall.position.y = 300;
 
-		player2.score = 0;
+		Score();
+		LocalGamestate.gameBall.lastHit = 0;
 	}
 
 	if (LocalGamestate.gameBall.position.y > 600) //hit bot wall player 1
 	{
 		LocalGamestate.gameBall.speed.x = 0;
-		LocalGamestate.gameBall.speed.y = -LocalGamestate.gameBall.speed.y;
+		LocalGamestate.gameBall.speed.y = 3;
 
 		LocalGamestate.gameBall.position.x = 300;
 		LocalGamestate.gameBall.position.y = 300;
 
-		player1.score = 0;
+		Score();
+		LocalGamestate.gameBall.lastHit = 0;
 	}
 
 	if (top_y > 300) 
@@ -187,7 +208,7 @@ void ball_update() {
 				LocalGamestate.gameBall.speed.x += -5;
 			}
 			LocalGamestate.gameBall.position.y += LocalGamestate.gameBall.speed.y;
-			player1.score += 1;
+			LocalGamestate.gameBall.lastHit = 1;
 		}
 	}
 	else {//player2
@@ -205,7 +226,7 @@ void ball_update() {
 			}
 			//LocalGamestate.gameBall.speed.x += (player2.paddle.speed.x / 2);
 			LocalGamestate.gameBall.position.y += LocalGamestate.gameBall.speed.y;
-			player2.score += 1;
+			LocalGamestate.gameBall.lastHit = 2;
 		}
 	}
 
@@ -217,14 +238,14 @@ void ball_update() {
 			LocalGamestate.gameBall.speed.x = -3;
 			if (LocalGamestate.gameBall.position.y > (player3.paddle.position.y + 25)) {
 				//right
-				LocalGamestate.gameBall.speed.x += 5;
+				LocalGamestate.gameBall.speed.y += 5;
 			}
-			if (LocalGamestate.gameBall.position.y < (player1.paddle.position.y + 25)) {
+			if (LocalGamestate.gameBall.position.y < (player3.paddle.position.y + 25)) {
 				//left
-				LocalGamestate.gameBall.speed.x += -5;
+				LocalGamestate.gameBall.speed.y += -5;
 			}
 			LocalGamestate.gameBall.position.x += LocalGamestate.gameBall.speed.x;
-			player4.score += 1;
+			LocalGamestate.gameBall.lastHit = 3;
 		}
 	}
 	else {
@@ -235,14 +256,14 @@ void ball_update() {
 			LocalGamestate.gameBall.speed.x = 3;
 			if (LocalGamestate.gameBall.position.y > (player4.paddle.position.y + 25)) {
 				//right
-				LocalGamestate.gameBall.speed.x += 5;
+				LocalGamestate.gameBall.speed.y += 5;
 			}
 			if (LocalGamestate.gameBall.position.y < (player4.paddle.position.y + 25)) {
 				//left
-				LocalGamestate.gameBall.speed.x += -5;
+				LocalGamestate.gameBall.speed.y += -5;
 			}
 			LocalGamestate.gameBall.position.x += LocalGamestate.gameBall.speed.x;
-			player3.score += 1;
+			LocalGamestate.gameBall.lastHit = 4;
 		}
 	}
 }
@@ -319,6 +340,10 @@ void openHandler(int clientID){
 
 /* called when a client disconnects */
 void closeHandler(int clientID){
+	Player_Count -= 1;
+	if (Player_Count < 4) {
+		allConnected = false;
+	}
 }
 
 
@@ -328,67 +353,69 @@ void messageHandler(int clientID, string message){
 	string move = message.substr(0, 2);
 	string name = message.substr(3, message.length());
 
-	if (clientID == 0) {
-		if (stoi(move) == 37) {
-			//left
-			//cout << "moved left";
-			player1.paddle.speed.x = -10;
-		}else if (stoi(move) == 39) {
-			//right
-			//cout << "moved right";
-			player1.paddle.speed.x = 10;
+	if (allConnected) {
+		if (clientID == 0) {
+			if (stoi(move) == 65) {
+				//left
+				//cout << "moved left";
+				player1.paddle.speed.x = -10;
+			}else if (stoi(move) == 68) {
+				//right
+				//cout << "moved right";
+				player1.paddle.speed.x = 10;
+			}
+
+			player1.name = name;
+			//std::cout << name;
 		}
 
-		player1.name = name;
-		//std::cout << name;
-	}
+		if (clientID == 1) {
+			if (stoi(move) == 65) {
+				//left
+				//cout << "moved left";
+				player2.paddle.speed.x = -10;
+			}
+			else if (stoi(move) == 68) {
+				//right
+				//cout << "moved right";
+				player2.paddle.speed.x = 10;
+			}
 
-	if (clientID == 1) {
-		if (stoi(move) == 37) {
-			//left
-			//cout << "moved left";
-			player2.paddle.speed.x = -10;
-		}
-		else if (stoi(move) == 39) {
-			//right
-			//cout << "moved right";
-			player2.paddle.speed.x = 10;
-		}
-
-		player2.name = name;
-		//std::cout << name;
-	}
-
-	if (clientID == 2) {
-		if (stoi(move) == 38) {
-			//up
-			//cout << "moved left";
-			player3.paddle.speed.y = -10;
-		}
-		else if (stoi(move) == 40) {
-			//down
-			//cout << "moved right";
-			player3.paddle.speed.y = 10;
+			player2.name = name;
+			//std::cout << name;
 		}
 
-		player3.name = name;
-		//std::cout << name;
-	}
+		if (clientID == 2) {
+			if (stoi(move) == 87) {
+				//up
+				//cout << "moved left";
+				player3.paddle.speed.y = -10;
+			}
+			else if (stoi(move) == 83) {
+				//down
+				//cout << "moved right";
+				player3.paddle.speed.y = 10;
+			}
 
-	if (clientID == 3) {
-		if (stoi(move) == 38) {
-			//up
-			//cout << "moved left";
-			player4.paddle.speed.y = -10;
-		}
-		else if (stoi(move) == 40) {
-			//down
-			//cout << "moved right";
-			player4.paddle.speed.y = 10;
+			player3.name = name;
+			//std::cout << name;
 		}
 
-		player4.name = name;
-		//std::cout << name;
+		if (clientID == 3) {
+			if (stoi(move) == 87) {
+				//up
+				//cout << "moved left";
+				player4.paddle.speed.y = -10;
+			}
+			else if (stoi(move) == 83) {
+				//down
+				//cout << "moved right";
+				player4.paddle.speed.y = 10;
+			}
+
+			player4.name = name;
+			//std::cout << name;
+		}
 	}
 
     /*ostringstream os;
@@ -409,34 +436,36 @@ void periodicHandler() {
 	auto current = std::chrono::system_clock::now();
 	
 	if (current >= next) {
-		//Update Gamestate Periodically
-		update();
+		if (allConnected) {
+			//Update Gamestate Periodically
+			update();
 		
-		//Send Updated Message To Clients
-		//ballinfo,playerinfo,score
-		std::string update_string = 
-			std::to_string(LocalGamestate.gameBall.position.x) + ":" + std::to_string(LocalGamestate.gameBall.position.y) +
-			":" + std::to_string(LocalGamestate.gameBall.speed.x) + ":" + std::to_string(LocalGamestate.gameBall.speed.y) + ":" +
+			//Send Updated Message To Clients
+			//ballinfo,playerinfo,score
+			std::string update_string = 
+				std::to_string(LocalGamestate.gameBall.position.x) + ":" + std::to_string(LocalGamestate.gameBall.position.y) +
+				":" + std::to_string(LocalGamestate.gameBall.speed.x) + ":" + std::to_string(LocalGamestate.gameBall.speed.y) + ":" +
 
-			std::to_string(player1.paddle.position.x) + ":" + std::to_string(player1.paddle.position.y) + ":" + std::to_string(player1.paddle.speed.x)
-			+ ":" + std::to_string(player1.paddle.speed.y) + ":" + std::to_string(player1.score) + ":" + player1.name + ":" +
+				std::to_string(player1.paddle.position.x) + ":" + std::to_string(player1.paddle.position.y) + ":" + std::to_string(player1.paddle.speed.x)
+				+ ":" + std::to_string(player1.paddle.speed.y) + ":" + std::to_string(player1.score) + ":" + player1.name + ":" +
 
-			std::to_string(player2.paddle.position.x) + ":" + std::to_string(player2.paddle.position.y) + ":" + std::to_string(player2.paddle.speed.x)
-			+ ":" + std::to_string(player2.paddle.speed.y) + ":" + std::to_string(player2.score) + ":" + player2.name
+				std::to_string(player2.paddle.position.x) + ":" + std::to_string(player2.paddle.position.y) + ":" + std::to_string(player2.paddle.speed.x)
+				+ ":" + std::to_string(player2.paddle.speed.y) + ":" + std::to_string(player2.score) + ":" + player2.name
 			
-			+ ":" + std::to_string(player3.paddle.position.x) + ":" + std::to_string(player3.paddle.position.y) + ":" + std::to_string(player3.paddle.speed.x)
-			+ ":" + std::to_string(player3.paddle.speed.y) + ":" + std::to_string(player3.score) + ":" + player3.name
+				+ ":" + std::to_string(player3.paddle.position.x) + ":" + std::to_string(player3.paddle.position.y) + ":" + std::to_string(player3.paddle.speed.x)
+				+ ":" + std::to_string(player3.paddle.speed.y) + ":" + std::to_string(player3.score) + ":" + player3.name
 			
-			+ ":" + std::to_string(player4.paddle.position.x) + ":" + std::to_string(player4.paddle.position.y) + ":" + std::to_string(player4.paddle.speed.x)
-			+ ":" + std::to_string(player4.paddle.speed.y) + ":" + std::to_string(player4.score) + ":" + player4.name;
+				+ ":" + std::to_string(player4.paddle.position.x) + ":" + std::to_string(player4.paddle.position.y) + ":" + std::to_string(player4.paddle.speed.x)
+				+ ":" + std::to_string(player4.paddle.speed.y) + ":" + std::to_string(player4.score) + ":" + player4.name;
 
-		ostringstream os;
-		os << update_string;
-		vector<int> clientIDs = server.getClientIDs();
-		for (int i = 0; i < clientIDs.size(); i++)
-			server.wsSend(clientIDs[i], os.str());
+			ostringstream os;
+			os << update_string;
+			vector<int> clientIDs = server.getClientIDs();
+			for (int i = 0; i < clientIDs.size(); i++)
+				server.wsSend(clientIDs[i], os.str());
 
-		next = std::chrono::system_clock::now() + std::chrono::milliseconds(10);
+			next = std::chrono::system_clock::now() + std::chrono::milliseconds(10);
+		}
 	}
 }
 
