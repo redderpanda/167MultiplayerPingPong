@@ -6,8 +6,10 @@
 #include "websocket.h"
 #include <thread>
 #include <chrono>
+#include <vector>
+#include <random>
 
-
+using namespace std::chrono;
 using namespace std;
 string ID_array[4];
 int Player_Count = 0;
@@ -74,6 +76,25 @@ Player player4;
 Player player_array[] = {player1, player2, player3, player4};
 
 GameState LocalGamestate;
+
+//dealing with latency
+std::vector<std::pair<long long,std::pair<long long, string>>> message_Vector; //vector of commands and times
+
+//fixed latency value
+long long s_latency = 2000;
+//rand latency min and max
+long long r_latency_min = 1000;
+long long r_latency_max = 3000;
+//incremental latency value
+long long i_latency_cur = 1000;
+long long i_latency_max = 3000;
+
+long long test_latency_num;
+bool send_latency_pack = false;
+
+std::default_random_engine generator;
+std::uniform_int_distribution<int> distribution(1000,3000);
+
 
 //later change to function that looks through clientIDList to see if all players are present
 bool allConnected = false;
@@ -350,19 +371,53 @@ void closeHandler(int clientID){
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, string message){
 	//set paddle/player values
-	string move = message.substr(0, 2);
-	string name = message.substr(3, message.length());
+	//string move = message.substr(0, 2);
+	//string time_sent_in_miliseconds = message.substr(2,13);
+	//Add instructions to queue, along with time to send
+	//In periodic handler look through queue and then send 
+	//the relevant packets back
+	//string name = message.substr(3, message.length());
+	
+	string move = message.substr(0, message.find_first_of(':'));
+	message.erase(0,message.find_first_of(':') + 1);
+	string time = message.substr(0, message.find_first_of(':'));
+	message.erase(0, message.find_first_of(':') + 1);
+	string name = message.substr(0, message.length());
+
+	milliseconds ms = duration_cast<milliseconds>(
+		system_clock::now().time_since_epoch());
+	long long ms_current = ms.count();
+
+	long long send_from_time = std::stoll(time);
+
+
+	//standard latency here--------------------------------------------------------------------------------------------------
+	long long long_time = ms_current + (s_latency - ((ms_current - send_from_time) * 2));
+
+	//random latency here----------------------------------------------------------------------------------------------------
+	//long long r_latency_current = distribution(generator); //rand num
+	//long long long_time = ms_current + (r_latency_current - ((ms_current - send_from_time) * 2));
+
+	//incremental latency here------------------------------------------------------------------------------------------------
+	//long long long_time = ms_current + (i_latency_cur - ((ms_current - send_from_time) * 2));
+
+
+	//std::cout << to_string(long_time) + "<<< Long Time";
+
+
+
+
 
 	if (allConnected) {
 		if (clientID == 0) {
 			if (stoi(move) == 65) {
 				//left
 				//cout << "moved left";
-				player1.paddle.speed.x = -10;
+				message_Vector.push_back(std::make_pair(long_time, std::make_pair(send_from_time,"p1.-10")));
 			}else if (stoi(move) == 68) {
 				//right
 				//cout << "moved right";
-				player1.paddle.speed.x = 10;
+				message_Vector.push_back(std::make_pair(long_time, std::make_pair(send_from_time, "p1.+10")));
 			}
 
 			player1.name = name;
@@ -373,12 +428,12 @@ void messageHandler(int clientID, string message){
 			if (stoi(move) == 65) {
 				//left
 				//cout << "moved left";
-				player2.paddle.speed.x = -10;
+				message_Vector.push_back(std::make_pair(long_time, std::make_pair(send_from_time, "p2.-10")));
 			}
 			else if (stoi(move) == 68) {
 				//right
 				//cout << "moved right";
-				player2.paddle.speed.x = 10;
+				message_Vector.push_back(std::make_pair(long_time, std::make_pair(send_from_time, "p2.+10")));
 			}
 
 			player2.name = name;
@@ -389,12 +444,12 @@ void messageHandler(int clientID, string message){
 			if (stoi(move) == 87) {
 				//up
 				//cout << "moved left";
-				player3.paddle.speed.y = -10;
+				message_Vector.push_back(std::make_pair(long_time, std::make_pair(send_from_time, "p3.-10")));
 			}
 			else if (stoi(move) == 83) {
 				//down
 				//cout << "moved right";
-				player3.paddle.speed.y = 10;
+				message_Vector.push_back(std::make_pair(long_time, std::make_pair(send_from_time, "p3.+10")));
 			}
 
 			player3.name = name;
@@ -405,18 +460,20 @@ void messageHandler(int clientID, string message){
 			if (stoi(move) == 87) {
 				//up
 				//cout << "moved left";
-				player4.paddle.speed.y = -10;
+				message_Vector.push_back(std::make_pair(long_time, std::make_pair(send_from_time, "p4.-10")));
 			}
 			else if (stoi(move) == 83) {
 				//down
 				//cout << "moved right";
-				player4.paddle.speed.y = 10;
+				message_Vector.push_back(std::make_pair(long_time, std::make_pair(send_from_time, "p4.+10")));
 			}
 
 			player4.name = name;
 			//std::cout << name;
 		}
 	}
+
+
 
     /*ostringstream os;
     os << "Stranger " << clientID << " says: " << message;*/
@@ -430,6 +487,27 @@ void messageHandler(int clientID, string message){
 }
 
 
+std::string form_packet(long long send_from_time) {
+	std::string update_string =
+		std::to_string(LocalGamestate.gameBall.position.x) + ":" + std::to_string(LocalGamestate.gameBall.position.y) +
+		":" + std::to_string(LocalGamestate.gameBall.speed.x) + ":" + std::to_string(LocalGamestate.gameBall.speed.y) + ":" +
+
+		std::to_string(player1.paddle.position.x) + ":" + std::to_string(player1.paddle.position.y) + ":" + std::to_string(player1.paddle.speed.x)
+		+ ":" + std::to_string(player1.paddle.speed.y) + ":" + std::to_string(player1.score) + ":" + player1.name + ":" +
+
+		std::to_string(player2.paddle.position.x) + ":" + std::to_string(player2.paddle.position.y) + ":" + std::to_string(player2.paddle.speed.x)
+		+ ":" + std::to_string(player2.paddle.speed.y) + ":" + std::to_string(player2.score) + ":" + player2.name
+
+		+ ":" + std::to_string(player3.paddle.position.x) + ":" + std::to_string(player3.paddle.position.y) + ":" + std::to_string(player3.paddle.speed.x)
+		+ ":" + std::to_string(player3.paddle.speed.y) + ":" + std::to_string(player3.score) + ":" + player3.name
+
+		+ ":" + std::to_string(player4.paddle.position.x) + ":" + std::to_string(player4.paddle.position.y) + ":" + std::to_string(player4.paddle.speed.x)
+		+ ":" + std::to_string(player4.paddle.speed.y) + ":" + std::to_string(player4.score) + ":" + player4.name + ":"
+		+ std::to_string(send_from_time);
+
+	return update_string;
+}
+
 /* called once per select() loop */
 void periodicHandler() {
 	static auto next = std::chrono::system_clock::now() + std::chrono::milliseconds(1000);
@@ -437,34 +515,129 @@ void periodicHandler() {
 	
 	if (current >= next) {
 		if (allConnected) {
+
+			milliseconds ms = duration_cast<milliseconds>(
+				system_clock::now().time_since_epoch());
+			long long ms_out = ms.count();
+
+			//change incremental latency;
+			if (i_latency_cur < i_latency_max) {
+				i_latency_cur += 1;
+			}
+
+			std::cout << std::to_string(i_latency_cur) + '\n';
+			
+			
+
+			//check vector for message times, and update accordingly
+			for (int i = 0; i < message_Vector.size(); i++) {
+				if (message_Vector[i].first <= ms_out) {
+					string command = message_Vector[i].second.second;
+					//to_erase.push_back(i);
+
+					send_latency_pack = true;
+
+					if (command == "p1.-10") {
+						player1.paddle.speed.x = -10;
+						//break;
+					}
+					if (command == "p1.+10") {
+						player1.paddle.speed.x = 10;
+						//break;
+					}
+					if (command == "p2.-10") {
+						player2.paddle.speed.x = -10;
+						//break;
+					}
+					if (command == "p2.+10") {
+						player2.paddle.speed.x = 10;
+						//break;
+					}
+					if (command == "p3.-10") {
+						player3.paddle.speed.y = -10;
+						//break;
+					}
+					if (command == "p3.+10") {
+						player3.paddle.speed.y = 10;
+						//break;
+					}
+					if (command == "p4.-10") {
+						player4.paddle.speed.y = -10;
+						//break;
+					}
+					if (command == "p4.+10") {
+						player4.paddle.speed.y = 10;
+						//break;
+					}
+
+					//std::string time_est_pack = form_packet(message_Vector[i].second.first);
+
+					test_latency_num = message_Vector[i].second.first;
+
+					message_Vector.erase(message_Vector.begin() + i);
+					i--;
+					
+					/*ostringstream us;
+					us << time_est_pack;
+					vector<int> clientIDs = server.getClientIDs();
+					for (int i = 0; i < clientIDs.size(); i++)
+						server.wsSend(clientIDs[i], us.str());*/
+
+				}	
+			}
+			/*for (auto i = message_Vector.begin(); i != message_Vector.end();) {
+				if ((*i).first <= ms_out) {
+					message_Vector.erase(message_Vector.begin());
+				}
+			
+			}*/
+
+			if (send_latency_pack) {
+				update();
+
+				std::string time_est_pack = form_packet(test_latency_num);
+
+				//cout << to_string(test_latency_num ) + "\n";
+
+				ostringstream us;
+				us << time_est_pack;
+				vector<int> clientIDs = server.getClientIDs();
+				for (int i = 0; i < clientIDs.size(); i++)
+					server.wsSend(clientIDs[i], us.str());
+
+				
+			}
+			else {
+				update();
+
+				std::string update_string = form_packet(0);
+
+				
+
+				ostringstream os;
+				os << update_string;
+				vector<int> clientIDs = server.getClientIDs();
+				for (int i = 0; i < clientIDs.size(); i++)
+					server.wsSend(clientIDs[i], os.str());
+
+				
+			}
+
 			//Update Gamestate Periodically
-			update();
+			send_latency_pack = false;
+
+			
 		
 			//Send Updated Message To Clients
 			//ballinfo,playerinfo,score
-			std::string update_string = 
-				std::to_string(LocalGamestate.gameBall.position.x) + ":" + std::to_string(LocalGamestate.gameBall.position.y) +
-				":" + std::to_string(LocalGamestate.gameBall.speed.x) + ":" + std::to_string(LocalGamestate.gameBall.speed.y) + ":" +
-
-				std::to_string(player1.paddle.position.x) + ":" + std::to_string(player1.paddle.position.y) + ":" + std::to_string(player1.paddle.speed.x)
-				+ ":" + std::to_string(player1.paddle.speed.y) + ":" + std::to_string(player1.score) + ":" + player1.name + ":" +
-
-				std::to_string(player2.paddle.position.x) + ":" + std::to_string(player2.paddle.position.y) + ":" + std::to_string(player2.paddle.speed.x)
-				+ ":" + std::to_string(player2.paddle.speed.y) + ":" + std::to_string(player2.score) + ":" + player2.name
+			//std::string update_string = form_packet(test_latency_num);
+			//using namespace std::chrono;
 			
-				+ ":" + std::to_string(player3.paddle.position.x) + ":" + std::to_string(player3.paddle.position.y) + ":" + std::to_string(player3.paddle.speed.x)
-				+ ":" + std::to_string(player3.paddle.speed.y) + ":" + std::to_string(player3.score) + ":" + player3.name
+			//std::cout << ms_out;
+
 			
-				+ ":" + std::to_string(player4.paddle.position.x) + ":" + std::to_string(player4.paddle.position.y) + ":" + std::to_string(player4.paddle.speed.x)
-				+ ":" + std::to_string(player4.paddle.speed.y) + ":" + std::to_string(player4.score) + ":" + player4.name;
 
-			ostringstream os;
-			os << update_string;
-			vector<int> clientIDs = server.getClientIDs();
-			for (int i = 0; i < clientIDs.size(); i++)
-				server.wsSend(clientIDs[i], os.str());
-
-			next = std::chrono::system_clock::now() + std::chrono::milliseconds(10);
+			next = std::chrono::system_clock::now() + std::chrono::milliseconds(100);
 		}
 	}
 }
