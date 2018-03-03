@@ -40,21 +40,33 @@
 		}
 		function runFunction(){ // function to be run a certain amount of times per millisecond
         	$(document).keydown(function(e){ // check if a key is pressed
+        		const time_now = new Date();
+        		const time_parse = Date.parse(time_now)
+        		//log("65:" + time_parse.toString() + ":" + document.getElementById('nickName').value);
+        		//var temp = time_now.toString();
+
+        		//log(temp.substring(19,24));
+        		//var temp2 = temp.substring(19,24) + ":" + time_now.getMilliseconds().toString();
+        		//log(temp2);
+        		//time_now = time_now.getMinutes();// +  time_now.getSeconds().toString() + time_now.getMilliseconds().toString();
         		if(e.keyCode == 65){ // a key
-        			//log("press left arrow");
-        			send("65:" + document.getElementById('nickName').value); // send to server
+        			//log(now.toString());
+        			send("65:" + time_parse.toString() + ":" + document.getElementById('nickName').value); // send to server
         		}
         		if(e.keyCode == 87){ //w key
         			//log("press up arrow");
-        			send("87:" + document.getElementById('nickName').value)
+        			//log(now.toString());
+        			send("87:" + time_parse.toString() + ":"  + document.getElementById('nickName').value)
         		}
         		if(e.keyCode == 68){ // d key
         			//log("press right arrow");
-        			send("68:" + document.getElementById('nickName').value); // send to server
+        			//log(now.toString());
+        			send("68:" + time_parse.toString() + ":"  + document.getElementById('nickName').value); // send to server
         		}
         		if(e.keyCode == 83){ // s key
         			//log("press down arrow");
-        			send("83:" + document.getElementById('nickName').value); // send to server
+        			//log(now.toString());
+        			send("83:" + time_parse.toString() + ":"  + document.getElementById('nickName').value); // send to server
         		}
 
         	}
@@ -89,7 +101,7 @@
 				// 	send();
 				// 	sentNickName = true;
 				// }
-				setInterval(runFunction,1000); // called every 500 milliseconds (0.5seconds)? seems to act faster though
+				setInterval(runFunction,100); // called every 500 milliseconds (0.5seconds)? seems to act faster though
 			});
 
 			//Let the user know we're connected
@@ -110,7 +122,7 @@
 				var gameState = payload.split(":"); // split by ":" then use indices to set correct places
 				//for(var i in gameState){
 					//correct format will be "ballX:ballY:ballspeedX:ballspeedY:player1X:player1Y:player1speedX:player1speedY:player1score:player1name:
-					//player2X:player2Y:player2speedX:player2speedY:player2score:player2name"
+					//player2X:player2Y:player2speedX:player2speedY:player2score:player2name:"
 
 					//index: 0 = ballX, 1 = ballY, 2 = ballspeedX, 3 = ballspeedY, 4 = player1X,
 					//5 = player1Y, 6 = player1speedX, 7 = player1speedY, 8 = player1score, 9 = player1name
@@ -120,6 +132,7 @@
 
 					//log(gameState[i]);
 				//}
+
 				ball.x = gameState[0];
 				ball.y = gameState[1];
 				ball.x_speed = gameState[2];
@@ -149,7 +162,21 @@
 				player4.paddle.y = gameState[23];
 				player4.paddle.x_speed = gameState[24];
 				player4.paddle.y_speed = gameState[25];
+				if(gameState[28] != "0")
+				{
+				const time_now = new Date();
+				var time_sent = Number(gameState[28]);
+				var diff = Date.parse(time_now) - time_sent;
+				//log("difference: " + diff.toString() +  ", time sent: " + gameState[28]);
+				//log("timenow " )
+					//set fso = CreateObject("Data.file");
+					//set s = fso.CreateTextFile("C:/data_file.txt");
+					//s.writeline(do)
+				log(diff.toString() + ":" + Date.parse(time_now).toString() + "\n");
+				}
 				
+
+
 			});
 
 			Server.connect();
@@ -180,8 +207,8 @@
 	<div id ='Scorediv'>
 		<h1 id='score'>player1:0, player2:0, player3:0, player4:0</h1>
 	<div id='textarea'>
-<!-- 		<textarea id='log' name='log' readonly='readonly'></textarea><br/>
-		<input type='text' id='message' name='message' /> -->
+			<textarea id='log' name='log' readonly='readonly'></textarea><br/>
+			<input type='text' id='message' name='message' />
 	</div>
 
 </body>
